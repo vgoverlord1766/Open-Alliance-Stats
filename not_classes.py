@@ -41,17 +41,45 @@ class Team:
 
 
 class Event:
-    def __init__(self, key):
+    def __init__(self, key, name, district_key, district_name):
         self.key = key
-        self.rankings = self.get_rankings()
+        self.name = name
 
-    def get_rankings(self):
-        event_rankings_response = requests.get("https://www.thebluealliance.com/api/v3/event/2023"
-                                               + self.key + "/rankings", params=parameters)
-        return json.loads(event_rankings_response.content)['rankings']
+        self.district_key = district_key
+        self.district_name = district_name
+
+        self.open_alliance_teams = self.check_for_OA_teams()
+        # self.rankings = self.get_rankings()
+
+    # def get_rankings(self):
+    #     event_rankings_response = requests.get("https://www.thebluealliance.com/api/v3/event/2023"
+    #                                            + self.key + "/rankings", params=parameters)
+    #     return json.loads(event_rankings_response.content)['rankings']
 
     def get_team_ranking(self, team):
         team_number = team.number
         for ranking in self.rankings:
             if ranking['team_key'] == 'frc' + str(team_number):
                 return ranking['rank']
+
+    def check_for_OA_teams(self):
+        list_file = open('OpenAlliance Teams.txt', 'r')
+        team_list = list_file.read().splitlines()
+        teams = []
+
+        event_teams_response = requests.get("https://www.thebluealliance.com/api/v3/event/" + self.key +
+                                            "/teams/simple", params=parameters)
+
+        event_teams = json.loads(event_teams_response.content)
+        event_teams_list = []
+        for event_team in event_teams:
+            event_teams_list.append(str(event_team['team_number']))
+
+        for event_team_listed in event_teams_list:
+            if event_team_listed in team_list:
+                teams.append(event_team_listed)
+
+        return teams
+
+
+
